@@ -1,0 +1,23 @@
+{
+    "manifest_version": 3,
+    "name": "Live Sports Commentator",
+    "version": "1.0",
+    "description": "get live sports audio to Whisper API",
+    "permissions": ["activeTab", "storage"],
+    "host_permissions": ["*://*/*"],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "action": {
+      "default_popup": "popup.html",
+      "default_icon": "icon.png"
+    },
+    "content_scripts": [
+      {
+        "matches": ["*://*/*"],
+        "js": ["content.js"],
+        "run_at": "document_idle"
+      }
+    ]
+  }
+  
