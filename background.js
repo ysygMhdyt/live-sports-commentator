@@ -1,5 +1,4 @@
 let mediaRecorder;
-let audioChunks = [];
 
 // 监听来自 popup 的消息
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
@@ -19,68 +18,80 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         } catch (error) {
             console.error("Error starting capture:", error);
         }
+    } else if (message.action === "audioData") {
+        // 收到音频数据后发送到Whisper API
+        await sendToWhisper(message.data);
     }
 });
 
-// 在页面上下文中执行的函数
+// 注入到目标页面的函数
 function startCapture() {
-    console.log("startCapture");
+    console.log("startCapture initiated");
     const mediaElement = document.querySelector("video, audio");
     if (!mediaElement) {
-        console.warn("Audio or video not found");
+        console.warn("No media element found");
         return;
     }
     
-    const stream = mediaElement.captureStream ? mediaElement.captureStream() : mediaElement.mozCaptureStream();
-    if (stream) {
-        startRecording(stream);
-    }
+    const stream = mediaElement.captureStream();
+    const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm',
+        audioBitsPerSecond: 16000 // Whisper推荐的比特率
+    });
+    
+    let currentChunk = [];
+    
+    mediaRecorder.ondataavailable = async (event) => {
+        if (event.data.size > 0) {
+            currentChunk.push(event.data);
+            
+            // 当收集到足够的数据时（约3秒），发送到Whisper
+            if (currentChunk.length >= 3) {
+                const blob = new Blob(currentChunk, { type: 'audio/webm' });
+                const arrayBuffer = await blob.arrayBuffer();
+                chrome.runtime.sendMessage({
+                    action: "audioData",
+                    data: arrayBuffer
+                });
+                currentChunk = []; // 清空当前chunk
+            }
+        }
+    };
+    
+    mediaRecorder.start(1000); // 每秒收集一次数据
+    console.log("Recording started in page context");
 }
 
-async function startRecording(stream) {
-    try {
-        console.log("startRecording");
-        mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
-        audioChunks = [];
-
-        mediaRecorder.ondataavailable = (event) => {
-            audioChunks.push(event.data);
-            console.log("audio chunk added");
-        };
-
-        mediaRecorder.onstop = async () => {
-            const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-            const audioFile = new File([audioBlob], "audio.webm", { type: "audio/webm" });
-
-            const transcript = await sendToWhisper(audioFile);
-            chrome.runtime.sendMessage({ action: "transcriptionResult", text: transcript });
-        };
-
-        mediaRecorder.start();
-        setTimeout(() => mediaRecorder.stop(), 10000); // 10 秒录音
-    } catch (error) {
-        console.error("Failed recording:", error);
-    }
-}
-
-async function sendToWhisper(audioFile) {
+// 发送音频到Whisper API
+async function sendToWhisper(audioData) {
     console.log("sending to whisper");
-    const apiKey = "YOUR_OPENAI_API_KEY";
     const formData = new FormData();
-    formData.append("file", audioFile);
+    const blob = new Blob([audioData], { type: 'audio/webm' });
+    formData.append("file", blob, "audio.webm");
     formData.append("model", "whisper-1");
 
     try {
-        const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
-            method: "POST",
-            headers: { "Authorization": `Bearer ${apiKey}` },
+        const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer YOUR_OPENAI_API_KEY'
+            },
             body: formData
         });
 
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const result = await response.json();
-        return result.text;
+        if (result.text) {
+            chrome.runtime.sendMessage({
+                action: "transcription",
+                text: result.text,
+                timestamp: new Date().toISOString()
+            });
+        }
     } catch (error) {
-        console.error("Whisper API failed:", error);
-        return "Failed to transcribe audio";
+        console.error('Error sending to Whisper:', error);
     }
 }
