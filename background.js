@@ -105,17 +105,18 @@ function startCapture() {
 
 // 发送音频到Whisper API
 async function sendToWhisper(audioData) {
-    console.log("sending to whisper");
+    console.log("sending to lemonfox");
     const formData = new FormData();
     const blob = new Blob([audioData], { type: 'audio/webm' });
-    formData.append("file", blob, "audio.webm");
-    formData.append("model", "whisper-1");
+    formData.append("file", blob);
+    formData.append("language", "english");
+    formData.append("response_format", "json");
 
     try {
-        const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        const response = await fetch('https://api.lemonfox.ai/v1/audio/transcriptions', {
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer YOUR_OPENAI_API_KEY'
+                'Authorization': 'Bearer API-KEY-1234567890'
             },
             body: formData
         });
@@ -133,6 +134,6 @@ async function sendToWhisper(audioData) {
             });
         }
     } catch (error) {
-        console.error('Error sending to Whisper:', error);
+        console.error('Error sending to LemonFox:', error);
     }
 }

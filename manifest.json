@@ -11,7 +11,7 @@
     ],
     "host_permissions": [
         "*://*/*",
-        "https://api.openai.com/*"
+        "https://api.lemonfox.ai/*"
     ],
     "background": {
       "service_worker": "background.js"
