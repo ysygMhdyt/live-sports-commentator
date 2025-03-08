@@ -1,4 +1,5 @@
 document.getElementById("start").addEventListener("click", () => {
+    console.log("start button clicked");
     chrome.runtime.sendMessage({ action: "start" });
 });
 
