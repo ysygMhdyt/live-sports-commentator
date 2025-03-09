@@ -141,7 +141,7 @@ async function sendToWhisper(audioData) {
         const response = await fetch('https://api.lemonfox.ai/v1/audio/transcriptions', {
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer XmDWb1cTvs75lVoZj0RMK6M9PmgLo2A5'
+                'Authorization': 'Bearer API'
             },
             body: formData
         });
