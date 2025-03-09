@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Sports Commentator</title>
     <style>
         body {
@@ -20,8 +22,7 @@
         }
         .header {
             padding: 10px;
-            background: #f5f5f5;
-            border-bottom: 1px solid #ddd;
+            background: white;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -29,10 +30,10 @@
         #transcriptionContainer {
             flex: 1;
             overflow-y: auto;
-            margin: 10px 0;
+            margin: 10px;
             padding: 10px;
             border: 1px solid #ccc;
-            border-radius: 4px;
+            border-radius: 10px;
             background: #fff;
         }
         .transcription-item {
@@ -51,14 +52,14 @@
         }
         #startButton {
             padding: 8px 16px;
-            background-color: #4CAF50;
+            background-color: #9705ea;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 10px;
             cursor: pointer;
         }
         #startButton.recording {
-            background-color: #f44336;
+            background-color: #7a5d8a;
         }
         #startButton:hover {
             opacity: 0.9;
@@ -70,6 +71,10 @@
     </style>
 </head>
 <body>
+    <div style="display: flex; align-items: center; padding-left: 10px; gap: 10px">
+        <img src="icon.png" alt="Logo" style="width: 24px; height: 24px;">
+        <h2>Live Sports Commentator</h2>
+    </div>
     <div class="container">
         <div class="header">
             <button id="startButton">Start Recording</button>
