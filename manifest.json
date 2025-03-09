@@ -2,23 +2,33 @@
     "manifest_version": 3,
     "name": "Live Sports Commentator",
     "version": "1.0",
-    "description": "get live sports audio to Whisper API",
+    "description": "A Chrome extension that provides live commentary for sports videos",
     "permissions": [
         "activeTab",
-        "storage",
         "scripting",
-        "tabs"
+        "storage"
     ],
     "host_permissions": [
         "*://*/*",
         "https://api.lemonfox.ai/*"
     ],
     "background": {
-      "service_worker": "background.js"
+        "service_worker": "background.js",
+        "type": "module"
     },
     "action": {
         "default_popup": "popup.html",
         "default_icon": "icon.png"
-    }
+    },
+    "web_accessible_resources": [{
+        "resources": ["content.js"],
+        "matches": ["<all_urls>"]
+    }],
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["content.js"]
+        }
+    ]
 }
   

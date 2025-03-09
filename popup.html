@@ -1,14 +1,82 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Sports Commentator</title>
-    <script src="popup.js" defer></script>
+    <style>
+        body {
+            width: 3000px;
+            height: 4000px;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            overflow: hidden;
+            position: fixed;
+            background: white;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .header {
+            padding: 10px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #transcriptionContainer {
+            flex: 1;
+            overflow-y: auto;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #fff;
+        }
+        .transcription-item {
+            margin-bottom: 10px;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .text {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .timestamp {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        #startButton {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #startButton.recording {
+            background-color: #f44336;
+        }
+        #startButton:hover {
+            opacity: 0.9;
+        }
+        .status {
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
-    <h2>Live Sports Commentator</h2>
-    <button id="start">Start</button>
-    <p id="result">Result...</p>
+    <div class="container">
+        <div class="header">
+            <button id="startButton">Start Recording</button>
+            <div class="status" id="status">Stopped</div>
+        </div>
+        <div id="transcriptionContainer"></div>
+    </div>
+    <script src="popup.js"></script>
 </body>
 </html>

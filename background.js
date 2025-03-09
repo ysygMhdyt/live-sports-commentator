@@ -1,25 +1,37 @@
+import transcriptionManager from './transcriptionManager.js';
+
 let mediaRecorder;
 
 // 监听来自 popup 的消息
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     if (message.action === "start") {
+        console.log("Background received start message");
         try {
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             if (!tab) {
                 console.error("No active tab found");
                 return;
             }
-            console.log("received start message");
-            // 注入并执行脚本来获取媒体流
+            
             await chrome.scripting.executeScript({
                 target: { tabId: tab.id },
-                function: startCapture
+                files: ['content.js']
             });
+            
+            setTimeout(() => {
+                chrome.tabs.sendMessage(tab.id, { action: "start" }, (response) => {
+                    if (chrome.runtime.lastError) {
+                        console.error("Error sending message:", chrome.runtime.lastError);
+                    } else {
+                        console.log("Message sent successfully");
+                    }
+                });
+            }, 100);
+            
         } catch (error) {
-            console.error("Error starting capture:", error);
+            console.error("Error in background script:", error);
         }
     } else if (message.action === "audioData") {
-        // 收到音频数据后发送到Whisper API
         await sendToWhisper(message.data);
     }
 });
@@ -104,34 +116,26 @@ function startCapture() {
 }
 
 // 发送音频到Whisper API
-async function sendToWhisper(base64Audio) {
+async function sendToWhisper(audioData) {
     console.log("Preparing to send to lemonfox");
     
     try {
-        // 将 base64 转回 blob
-        const binaryString = atob(base64Audio);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-        }
-        
-        const blob = new Blob([bytes], { type: 'audio/webm;codecs=opus' });
+        const uint8Array = new Uint8Array(audioData);
+        const blob = new Blob([uint8Array], { type: 'audio/wav' });
         console.log("Created blob:", {
             size: blob.size,
             type: blob.type
         });
 
         const formData = new FormData();
-        formData.append("file", blob, "audio.webm");
+        formData.append("file", blob, "audio.wav");
         formData.append("language", "english");
         formData.append("response_format", "json");
 
-        // 添加更多的请求头
         const response = await fetch('https://api.lemonfox.ai/v1/audio/transcriptions', {
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer XmDWb1cTvs75lVoZj0RMK6M9PmgLo2A5',
-                'Accept': 'application/json'
+                'Authorization': 'Bearer XmDWb1cTvs75lVoZj0RMK6M9PmgLo2A5'
             },
             body: formData
         });
@@ -139,28 +143,18 @@ async function sendToWhisper(base64Audio) {
         if (!response.ok) {
             const errorText = await response.text();
             console.error("API Error Response:", errorText);
-            
-            // 添加更详细的错误信息
-            const errorDetails = {
-                status: response.status,
-                statusText: response.statusText,
-                headers: Object.fromEntries(response.headers.entries()),
-                body: errorText
-            };
-            console.error("Detailed error information:", errorDetails);
-            
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const result = await response.json();
         console.log("API Response:", result);
         
-        if (result.text) {
-            chrome.runtime.sendMessage({
-                action: "transcription",
-                text: result.text,
-                timestamp: new Date().toISOString()
-            });
+        if (result.text && result.text.trim()) {
+            // 使用 TranscriptionManager 来管理转录文本
+            transcriptionManager.addTranscription(
+                result.text,
+                new Date().toISOString()
+            );
         }
     } catch (error) {
         console.error('Error sending to LemonFox:', error);

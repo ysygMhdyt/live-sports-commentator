@@ -1,15 +1,68 @@
-document.getElementById("start").addEventListener("click", () => {
-    console.log("start button clicked");
-    chrome.runtime.sendMessage({ action: "start" });
-    document.getElementById("result").textContent = "Recording and transcribing...";
+let isRecording = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const startButton = document.getElementById('startButton');
+    const transcriptionContainer = document.getElementById('transcriptionContainer');
+    const statusElement = document.getElementById('status');
+
+    // 恢复之前的转录记录
+    chrome.runtime.sendMessage({action: "getTranscriptions"}, (response) => {
+        if (response && response.transcriptions) {
+            updateTranscriptionDisplay(response.transcriptions);
+        }
+    });
+
+    startButton.addEventListener('click', function() {
+        if (!isRecording) {
+            chrome.runtime.sendMessage({action: "start"});
+            startButton.textContent = "Stop Recording";
+            startButton.classList.add('recording');
+            statusElement.textContent = "Recording";
+            isRecording = true;
+        } else {
+            chrome.runtime.sendMessage({action: "stop"});
+            startButton.textContent = "Start Recording";
+            startButton.classList.remove('recording');
+            statusElement.textContent = "Stopped";
+            isRecording = false;
+        }
+    });
+
+    // 监听转录更新
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        if (message.action === "updateTranscriptions") {
+            updateTranscriptionDisplay(message.transcriptions);
+        }
+    });
+
+    function updateTranscriptionDisplay(transcriptions) {
+        transcriptionContainer.innerHTML = '';
+        
+        transcriptions.forEach(trans => {
+            const div = document.createElement('div');
+            div.className = 'transcription-item';
+            
+            const time = new Date(trans.timestamp);
+            const timeStr = time.toLocaleTimeString();
+            
+            div.innerHTML = `
+                <div class="text">${trans.text}</div>
+                <div class="timestamp">${timeStr}</div>
+            `;
+            
+            transcriptionContainer.appendChild(div);
+        });
+        
+        // 自动滚动到底部
+        transcriptionContainer.scrollTop = transcriptionContainer.scrollHeight;
+    }
 });
 
-// 监听来自background script的转录结果
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === "transcription") {
-        const currentText = document.getElementById("result").textContent;
-        // 添加新的转录文本，保留最近的几条记录
-        document.getElementById("result").textContent = 
-            `${message.timestamp}: ${message.text}\n${currentText}`.split('\n').slice(0, 5).join('\n');
+// 保持popup窗口打开
+chrome.runtime.onConnect.addListener(function(port) {
+    if (port.name === "popup") {
+        port.onDisconnect.addListener(function() {
+            // popup关闭时的处理
+        });
     }
 });
