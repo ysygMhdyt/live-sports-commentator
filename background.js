@@ -31,6 +31,25 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         } catch (error) {
             console.error("Error in background script:", error);
         }
+    } else if (message.action === "stop") {
+        console.log("Background received stop message");
+        try {
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (!tab) {
+                console.error("No active tab found");
+                return;
+            }
+            
+            chrome.tabs.sendMessage(tab.id, { action: "stop" }, (response) => {
+                if (chrome.runtime.lastError) {
+                    console.error("Error sending stop message:", chrome.runtime.lastError);
+                } else {
+                    console.log("Stop message sent successfully");
+                }
+            });
+        } catch (error) {
+            console.error("Error in background script:", error);
+        }
     } else if (message.action === "audioData") {
         await sendToWhisper(message.data);
     }
@@ -63,11 +82,10 @@ function startCapture() {
         }
 
         function startRecording() {
-            const audioContext = new AudioContext({ sampleRate: 44100 }); // 使用标准采样率
+            const audioContext = new AudioContext({ sampleRate: 44100 });
             const source = audioContext.createMediaElementSource(videoElement);
             const destination = audioContext.createMediaStreamDestination();
             
-            // 添加音频处理节点来确保音频质量
             const gainNode = audioContext.createGain();
             gainNode.gain.value = 1.0;
             
@@ -77,33 +95,21 @@ function startCapture() {
 
             const stream = destination.stream;
             const audioTracks = stream.getAudioTracks();
-            
-            console.log("Audio setup:", {
-                contextState: audioContext.state,
-                sampleRate: audioContext.sampleRate,
-                trackCount: audioTracks.length,
-                trackSettings: audioTracks[0]?.getSettings()
-            });
-
-            if (audioTracks.length === 0) {
-                console.error("No audio tracks found");
-                return;
-            }
 
             const options = {
                 mimeType: 'audio/webm;codecs=opus',
                 audioBitsPerSecond: 128000
             };
 
-            const mediaRecorder = new MediaRecorder(stream, options);
-            console.log("MediaRecorder created:", {
-                state: mediaRecorder.state,
-                options: options
-            });
+            mediaRecorder = new MediaRecorder(stream, options);
+            
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    // 处理音频数据...
+                }
+            };
 
-            // 设置更短的时间间隔
-            mediaRecorder.start(200); // 每200ms收集一次数据
-            console.log("Recording started");
+            mediaRecorder.start(200);
         }
     } catch (error) {
         console.error("Error in startCapture:", error);
@@ -204,5 +210,17 @@ function convertToWav(audioBuffer) {
 function writeString(view, offset, string) {
     for (let i = 0; i < string.length; i++) {
         view.setUint8(offset + i, string.charCodeAt(i));
+    }
+}
+
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+        mediaRecorder = null;
+    }
+    // 清理其他资源...
+    if (audioContext) {
+        audioContext.close();
+        audioContext = null;
     }
 }
