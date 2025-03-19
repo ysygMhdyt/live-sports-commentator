@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const startButton = document.getElementById('startButton');
     const transcriptionContainer = document.getElementById('transcriptionContainer');
     const statusElement = document.getElementById('status');
+    const languageSelect = document.getElementById('languageSelect');
+    const styleSelect = document.getElementById('styleSelect');
 
     // 恢复之前的转录记录
     chrome.runtime.sendMessage({action: "getTranscriptions"}, (response) => {
@@ -33,6 +35,31 @@ document.addEventListener('DOMContentLoaded', function() {
         if (message.action === "updateTranscriptions") {
             updateTranscriptionDisplay(message.transcriptions);
         }
+    });
+
+    // 保存设置变化
+    languageSelect.addEventListener('change', function() {
+        chrome.storage.local.set({ language: this.value });
+        // 通知后台脚本设置已更改
+        chrome.runtime.sendMessage({
+            action: "updateSettings",
+            settings: {
+                language: this.value,
+                style: styleSelect.value
+            }
+        });
+    });
+
+    styleSelect.addEventListener('change', function() {
+        chrome.storage.local.set({ style: this.value });
+        // 通知后台脚本设置已更改
+        chrome.runtime.sendMessage({
+            action: "updateSettings",
+            settings: {
+                language: languageSelect.value,
+                style: this.value
+            }
+        });
     });
 
     function updateTranscriptionDisplay(transcriptions) {

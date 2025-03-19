@@ -1,6 +1,10 @@
 import transcriptionManager from './transcriptionManager.js';
 
 let mediaRecorder;
+let currentSettings = {
+    language: 'english',
+    style: 'default'
+};
 
 // 监听来自 popup 的消息
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
@@ -52,6 +56,8 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         }
     } else if (message.action === "audioData") {
         await sendToWhisper(message.data);
+    } else if (message.action === "updateSettings") {
+        currentSettings = message.settings;
     }
 });
 
@@ -135,13 +141,31 @@ async function sendToWhisper(audioData) {
 
         const formData = new FormData();
         formData.append("file", blob, "audio.wav");
-        formData.append("language", "english");
         formData.append("response_format", "json");
+
+        // 在 sendToWhisper 函数中修改 prompt 设置
+        let prompt = "";
+
+        // 添加风格提示
+        switch(currentSettings.style) {
+            case "excited":
+                prompt += "Please rephrase it in an enthusiastic and passionate sports commentary style:";
+                break;
+            case "technical":
+                prompt += "Please rephrase it in a professional technical analysis style:";
+                break;
+            case "casual":
+                prompt += "Please rephrase it in a lighthearted and entertaining style:";
+                break;
+            default:
+                prompt += "";
+        }
+        formData.append("prompt", prompt);
 
         const response = await fetch('https://api.lemonfox.ai/v1/audio/transcriptions', {
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer API'
+                'Authorization': 'Bearer API-Key'
             },
             body: formData
         });

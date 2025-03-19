@@ -4,9 +4,8 @@ A Chrome extension that provides real-time audio transcription for sports videos
 
 ## TODO
 
+- add translate
 - fix restart
-- translate and style
-- accuracy?
 
 ## Features
 

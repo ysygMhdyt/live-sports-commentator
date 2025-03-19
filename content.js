@@ -124,7 +124,7 @@ function startRecording() {
         
         audioData.push(samples);
         
-        if (audioData.length >= 10) {
+        if (audioData.length >= 30) {
             const combinedData = concatenateAudioData(audioData);
             sendAudioData(combinedData);
             audioData = [];

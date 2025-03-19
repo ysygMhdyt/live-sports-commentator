@@ -68,6 +68,17 @@
             font-size: 12px;
             color: #666;
         }
+        .settings {
+            display: flex;
+            gap: 10px;
+            margin-left: 10px;
+        }
+        .settings select {
+            padding: 6px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -76,6 +87,20 @@
         <h2>Live Sports Commentator</h2>
     </div>
     <div class="container">
+        <div class="settings">
+            <select id="languageSelect">
+                <option value="english">English</option>
+                <option value="spanish">Español</option>
+                <option value="chinese">中文</option>
+                <option value="japanese">日本語</option>
+            </select>
+            <select id="styleSelect">
+                <option value="default">Default Style</option>
+                <option value="excited">Excited</option>
+                <option value="technical">Technical</option>
+                <option value="casual">Casual</option>
+            </select>
+        </div>
         <div class="header">
             <button id="startButton">Start Recording</button>
             <div class="status" id="status">Stopped</div>
