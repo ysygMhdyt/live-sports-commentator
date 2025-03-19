@@ -2,6 +2,12 @@
 
 A Chrome extension that provides real-time audio transcription for sports videos, converting speech to text using the LemonFox AI API.
 
+## TODO
+
+- fix restart
+- translate and style
+- accuracy?
+
 ## Features
 
 - Real-time audio capture from video elements
