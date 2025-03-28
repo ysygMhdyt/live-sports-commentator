@@ -1,10 +1,16 @@
 import transcriptionManager from './transcriptionManager.js';
+import OpenAI from "openai";
 
 let mediaRecorder;
 let currentSettings = {
     language: 'english',
     style: 'default'
 };
+
+const openai = new OpenAI({
+    baseURL: 'https://api.deepseek.com',
+    apiKey: 'api-key'
+});
 
 // 监听来自 popup 的消息
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
@@ -77,29 +83,10 @@ async function sendToWhisper(audioData) {
         formData.append("file", blob, "audio.wav");
         formData.append("response_format", "json");
 
-        // 在 sendToWhisper 函数中修改 prompt 设置
-        let prompt = "";
-
-        // 添加风格提示
-        switch(currentSettings.style) {
-            case "excited":
-                prompt += "Please rephrase it in an enthusiastic and passionate sports commentary style:";
-                break;
-            case "technical":
-                prompt += "Please rephrase it in a professional technical analysis style:";
-                break;
-            case "casual":
-                prompt += "Please rephrase it in a lighthearted and entertaining style:";
-                break;
-            default:
-                prompt += "";
-        }
-        formData.append("prompt", prompt);
-
         const response = await fetch('https://api.lemonfox.ai/v1/audio/transcriptions', {
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer API-Key'
+                'Authorization': 'Bearer API-key'
             },
             body: formData
         });
@@ -114,15 +101,78 @@ async function sendToWhisper(audioData) {
         console.log("API Response:", result);
         
         if (result.text && result.text.trim()) {
-            // 使用 TranscriptionManager 来管理转录文本
+            // 先用 DeepSeek 处理文本
+            const processedText = await processWithDeepSeek(result.text);
+            
+            // 使用处理后的文本更新转录
             transcriptionManager.addTranscription(
-                result.text,
+                processedText,
                 new Date().toISOString()
             );
         }
     } catch (error) {
         console.error('Error sending to LemonFox:', error);
     }
+}
+
+async function processWithDeepSeek(text) {
+    try {
+        const prompt = generatePrompt(text, currentSettings);
+        
+        const completion = await openai.chat.completions.create({
+            messages: [
+                { 
+                    role: "system", 
+                    content: "You are a professional sports commentator who can translate and rephrase content in different styles." 
+                },
+                {
+                    role: "user",
+                    content: prompt
+                }
+            ],
+            model: "deepseek-chat",
+            temperature: 0.7
+        });
+
+        return completion.choices[0].message.content;
+    } catch (error) {
+        console.error('Error calling DeepSeek API:', error);
+        return text; // 如果处理失败，返回原始文本
+    }
+}
+
+function generatePrompt(text, settings) {
+    let prompt = "";
+    
+    // 添加翻译指令
+    if (settings.language !== 'english') {
+        switch(settings.language) {
+            case 'chinese':
+                prompt += "Translate the following text to Chinese. ";
+                break;
+            case 'spanish':
+                prompt += "Translate the following text to Spanish. ";
+                break;
+            case 'japanese':
+                prompt += "Translate the following text to Japanese. ";
+                break;
+        }
+    }
+    
+    // 添加风格化指令
+    switch(settings.style) {
+        case "excited":
+            prompt += "Rephrase it in an enthusiastic and passionate sports commentary style: ";
+            break;
+        case "technical":
+            prompt += "Rephrase it in a professional technical analysis style: ";
+            break;
+        case "casual":
+            prompt += "Rephrase it in a lighthearted and entertaining style: ";
+            break;
+    }
+    
+    return prompt + text;
 }
 
 function stopRecording() {
