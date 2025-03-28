@@ -141,39 +141,56 @@ async function processWithDeepSeek(text) {
     }
 }
 
-function generatePrompt(text, settings) {
+// function generatePrompt(text, settings) {
+//     let prompt = "";
+    
+//     // 添加翻译指令
+//     if (settings.language !== 'english') {
+//         switch(settings.language) {
+//             case 'chinese':
+//                 prompt += "Translate the following text to Chinese. ";
+//                 break;
+//             case 'spanish':
+//                 prompt += "Translate the following text to Spanish. ";
+//                 break;
+//             case 'japanese':
+//                 prompt += "Translate the following text to Japanese. ";
+//                 break;
+//         }
+//     }
+    
+//     // 添加风格化指令
+//     switch(settings.style) {
+//         case "excited":
+//             prompt += "Rephrase it in an enthusiastic and passionate sports commentary style: ";
+//             break;
+//         case "technical":
+//             prompt += "Rephrase it in a professional technical analysis style: ";
+//             break;
+//         case "casual":
+//             prompt += "Rephrase it in a lighthearted and entertaining style: ";
+//             break;
+//     }
+    
+//     return prompt + text;
+// }
+
+function generatePrompt(text, userInput) {
     let prompt = "";
-    
+
     // 添加翻译指令
-    if (settings.language !== 'english') {
-        switch(settings.language) {
-            case 'chinese':
-                prompt += "Translate the following text to Chinese. ";
-                break;
-            case 'spanish':
-                prompt += "Translate the following text to Spanish. ";
-                break;
-            case 'japanese':
-                prompt += "Translate the following text to Japanese. ";
-                break;
-        }
+    if (userInput.language.toLowerCase() !== 'english') {
+        prompt += `Translate the following text to ${userInput.language}. `;
     }
-    
+
     // 添加风格化指令
-    switch(settings.style) {
-        case "excited":
-            prompt += "Rephrase it in an enthusiastic and passionate sports commentary style: ";
-            break;
-        case "technical":
-            prompt += "Rephrase it in a professional technical analysis style: ";
-            break;
-        case "casual":
-            prompt += "Rephrase it in a lighthearted and entertaining style: ";
-            break;
+    if (userInput.commentator) {
+        prompt += `Rephrase it in the style of ${userInput.commentator}, focusing on their typical tone and commentary style. `;
     }
-    
+
     return prompt + text;
 }
+
 
 function stopRecording() {
     if (mediaRecorder && mediaRecorder.state === "recording") {

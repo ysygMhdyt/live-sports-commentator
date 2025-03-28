@@ -4,11 +4,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const startButton = document.getElementById('startButton');
     const transcriptionContainer = document.getElementById('transcriptionContainer');
     const statusElement = document.getElementById('status');
-    const languageSelect = document.getElementById('languageSelect');
-    const styleSelect = document.getElementById('styleSelect');
+    const settingsInput = document.getElementById('settingsInput');
 
     // 恢复之前的转录记录
-    chrome.runtime.sendMessage({action: "getTranscriptions"}, (response) => {
+    chrome.runtime.sendMessage({ action: "getTranscriptions" }, (response) => {
         if (response && response.transcriptions) {
             updateTranscriptionDisplay(response.transcriptions);
         }
@@ -16,13 +15,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     startButton.addEventListener('click', function() {
         if (!isRecording) {
-            chrome.runtime.sendMessage({action: "start"});
+            // 解析用户输入
+            const userInput = parseUserInput(settingsInput.value);
+
+            // 保存到本地 storage
+            chrome.storage.local.set({ language: userInput.language, commentator: userInput.commentator });
+
+            // 通知后台脚本
+            chrome.runtime.sendMessage({
+                action: "updateSettings",
+                settings: userInput
+            });
+
+            // 开始录音
+            chrome.runtime.sendMessage({ action: "start" });
             startButton.textContent = "Stop Recording";
             startButton.classList.add('recording');
             statusElement.textContent = "Recording";
             isRecording = true;
         } else {
-            chrome.runtime.sendMessage({action: "stop"});
+            chrome.runtime.sendMessage({ action: "stop" });
             startButton.textContent = "Start Recording";
             startButton.classList.remove('recording');
             statusElement.textContent = "Stopped";
@@ -37,51 +49,36 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // 保存设置变化
-    languageSelect.addEventListener('change', function() {
-        chrome.storage.local.set({ language: this.value });
-        // 通知后台脚本设置已更改
-        chrome.runtime.sendMessage({
-            action: "updateSettings",
-            settings: {
-                language: this.value,
-                style: styleSelect.value
-            }
-        });
-    });
-
-    styleSelect.addEventListener('change', function() {
-        chrome.storage.local.set({ style: this.value });
-        // 通知后台脚本设置已更改
-        chrome.runtime.sendMessage({
-            action: "updateSettings",
-            settings: {
-                language: languageSelect.value,
-                style: this.value
-            }
-        });
-    });
-
     function updateTranscriptionDisplay(transcriptions) {
         transcriptionContainer.innerHTML = '';
-        
+
         transcriptions.forEach(trans => {
             const div = document.createElement('div');
             div.className = 'transcription-item';
-            
+
             const time = new Date(trans.timestamp);
             const timeStr = time.toLocaleTimeString();
-            
+
             div.innerHTML = `
                 <div class="text">${trans.text}</div>
                 <div class="timestamp">${timeStr}</div>
             `;
-            
+
             transcriptionContainer.appendChild(div);
         });
-        
-        // 自动滚动到底部
+
         transcriptionContainer.scrollTop = transcriptionContainer.scrollHeight;
+    }
+
+    // 解析用户输入
+    function parseUserInput(inputText) {
+        const languageMatch = inputText.match(/in (\w+)/i);
+        const commentatorMatch = inputText.match(/similar to (.+)$/i);
+
+        return {
+            language: languageMatch ? languageMatch[1] : 'english',
+            commentator: commentatorMatch ? commentatorMatch[1] : ''
+        };
     }
 });
 
