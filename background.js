@@ -7,8 +7,6 @@ let currentSettings = {
     commentator: ''
 };
 
-require('dotenv').config();
-
 const openai = new OpenAI({
     baseURL: 'https://openrouter.ai/api/v1',
     apiKey: 'DEEPSEEK_API_KEY'
@@ -63,7 +61,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
             console.error("Error in background script:", error);
         }
     } else if (message.action === "audioData") {
-        await sendToWhisper(message.data);
+            await sendToWhisper(message.data);
     } else if (message.action === "updateSettings") {
         currentSettings = message.settings;
     }
