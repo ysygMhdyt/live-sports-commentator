@@ -88,12 +88,22 @@
     </div>
     <div class="container">
         <div class="settings">
-            <input 
-                type="text" 
-                id="settingsInput" 
-                placeholder="e.g. I want to have commentation in Spanish and the style is similar to Stephen A. Smith"
-                style="flex: 1; padding: 6px; border-radius: 5px; border: 1px solid #ccc; font-size: 12px;"
-            >
+            <div style="font-size: 12px; color: #333;">
+                I want commentation in 
+                <input 
+                    type="text" 
+                    id="languageInput" 
+                    placeholder="language" 
+                    style="width: 80px; padding: 4px; border-radius: 5px; border: 1px solid #ccc; font-size: 12px;"
+                > 
+                and the style is similar to 
+                <input 
+                    type="text" 
+                    id="commentatorInput" 
+                    placeholder="commentator" 
+                    style="width: 140px; padding: 4px; border-radius: 5px; border: 1px solid #ccc; font-size: 12px;"
+                >
+            </div>
         </div>
         <div class="header">
             <button id="startButton">Start Recording</button>

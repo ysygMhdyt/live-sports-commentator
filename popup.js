@@ -4,7 +4,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const startButton = document.getElementById('startButton');
     const transcriptionContainer = document.getElementById('transcriptionContainer');
     const statusElement = document.getElementById('status');
-    const settingsInput = document.getElementById('settingsInput');
+    const languageInput = document.getElementById('languageInput');
+    const commentatorInput = document.getElementById('commentatorInput');
 
     // 恢复之前的转录记录
     chrome.runtime.sendMessage({ action: "getTranscriptions" }, (response) => {
@@ -15,16 +16,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     startButton.addEventListener('click', function() {
         if (!isRecording) {
-            // 解析用户输入
-            const userInput = parseUserInput(settingsInput.value);
+            // 获取用户输入
+            const language = languageInput.value.trim() || 'english';
+            const commentator = commentatorInput.value.trim() || '';
 
             // 保存到本地 storage
-            chrome.storage.local.set({ language: userInput.language, commentator: userInput.commentator });
+            chrome.storage.local.set({ language, commentator });
 
             // 通知后台脚本
             chrome.runtime.sendMessage({
                 action: "updateSettings",
-                settings: userInput
+                settings: { language, commentator }
             });
 
             // 开始录音
@@ -68,17 +70,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         transcriptionContainer.scrollTop = transcriptionContainer.scrollHeight;
-    }
-
-    // 解析用户输入
-    function parseUserInput(inputText) {
-        const languageMatch = inputText.match(/in (\w+)/i);
-        const commentatorMatch = inputText.match(/similar to (.+)$/i);
-
-        return {
-            language: languageMatch ? languageMatch[1] : 'english',
-            commentator: commentatorMatch ? commentatorMatch[1] : ''
-        };
     }
 });
 

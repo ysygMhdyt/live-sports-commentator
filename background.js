@@ -159,7 +159,7 @@ function generatePrompt(text, userInput) {
 
     // 添加翻译指令
     if (userInput.language.toLowerCase() !== 'english') {
-        prompt += `Translate the following text to ${userInput.language}, `;
+        prompt += `Translate the following text transcribed from a sports game commentary to ${userInput.language}, `;
     }
 
     // 添加风格化指令
