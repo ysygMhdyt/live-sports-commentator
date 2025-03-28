@@ -1,5 +1,5 @@
 import transcriptionManager from './transcriptionManager.js';
-// import OpenAI from "openai";
+import OpenAI from 'openai';
 
 let mediaRecorder;
 let currentSettings = {
@@ -7,10 +7,12 @@ let currentSettings = {
     commentator: ''
 };
 
-// const openai = new OpenAI({
-//     baseURL: 'https://api.deepseek.com',
-//     apiKey: 'api-key'
-// });
+require('dotenv').config();
+
+const openai = new OpenAI({
+    baseURL: 'https://openrouter.ai/api/v1',
+    apiKey: 'DEEPSEEK_API_KEY'
+});
 
 // 监听来自 popup 的消息
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
@@ -86,7 +88,7 @@ async function sendToWhisper(audioData) {
         const response = await fetch('https://api.lemonfox.ai/v1/audio/transcriptions', {
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer Api-key'
+                'Authorization': 'Bearer API_KEY'
             },
             body: formData
         });
@@ -120,34 +122,21 @@ async function processWithDeepSeek(text) {
         const prompt = generatePrompt(text, currentSettings);
         console.log(prompt)
         
-        const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer DEEPSEEK_API_KEY'
-            },
-            body: JSON.stringify({
-                model: "deepseek-chat",
-                messages: [
-                    { 
-                        role: "system", 
-                        content: "You are a professional sports commentator who can translate and rephrase content in different styles." 
-                    },
-                    {
-                        role: "user",
-                        content: prompt
-                    }
-                ],
-                temperature: 0.7
-            })
+        const completion = await openai.chat.completions.create({
+            model: "deepseek/deepseek-chat-v3-0324:free",
+            messages: [
+                { 
+                    role: "system", 
+                    content: "You are a professional sports commentator who can translate and rephrase content in different styles." 
+                },
+                {
+                    role: "user",
+                    content: prompt
+                }
+            ],
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        return result.choices[0].message.content;
+        return completion.choices[0].message.content;
     } catch (error) {
         console.error('Error calling DeepSeek API:', error);
         return text;
