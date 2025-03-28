@@ -147,8 +147,8 @@ function generatePrompt(text, userInput) {
     // 添加角色指令
     prompt += `You are a professional sports commentary translator. Your task is to translate live sports commentary into the language specified by the user, aligning with the style the user chooses.`;
 
-    // 添加减轻幻觉指令
-    prompt += 'OUTPUT TRANSLATED COMMENTATION ONLY. DO NOT OUTPUT ANYTHING ELSE.'
+    // 添加减少幻觉指令
+    prompt += 'OUTPUT TRANSLATED COMMENTARY ONLY. DO NOT INCLUDE ANY EXPLANATIONS, NOTES, OR ADDITIONAL CONTENT.' 
 
     // 添加翻译指令
     if (userInput.language.toLowerCase() !== 'english') {
