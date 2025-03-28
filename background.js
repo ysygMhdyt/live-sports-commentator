@@ -1,16 +1,16 @@
 import transcriptionManager from './transcriptionManager.js';
-import OpenAI from "openai";
+// import OpenAI from "openai";
 
 let mediaRecorder;
 let currentSettings = {
     language: 'english',
-    style: 'default'
+    commentator: ''
 };
 
-const openai = new OpenAI({
-    baseURL: 'https://api.deepseek.com',
-    apiKey: 'api-key'
-});
+// const openai = new OpenAI({
+//     baseURL: 'https://api.deepseek.com',
+//     apiKey: 'api-key'
+// });
 
 // 监听来自 popup 的消息
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
@@ -86,7 +86,7 @@ async function sendToWhisper(audioData) {
         const response = await fetch('https://api.lemonfox.ai/v1/audio/transcriptions', {
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer API-key'
+                'Authorization': 'Bearer Api-key'
             },
             body: formData
         });
@@ -118,74 +118,53 @@ async function sendToWhisper(audioData) {
 async function processWithDeepSeek(text) {
     try {
         const prompt = generatePrompt(text, currentSettings);
+        console.log(prompt)
         
-        const completion = await openai.chat.completions.create({
-            messages: [
-                { 
-                    role: "system", 
-                    content: "You are a professional sports commentator who can translate and rephrase content in different styles." 
-                },
-                {
-                    role: "user",
-                    content: prompt
-                }
-            ],
-            model: "deepseek-chat",
-            temperature: 0.7
+        const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer DEEPSEEK_API_KEY'
+            },
+            body: JSON.stringify({
+                model: "deepseek-chat",
+                messages: [
+                    { 
+                        role: "system", 
+                        content: "You are a professional sports commentator who can translate and rephrase content in different styles." 
+                    },
+                    {
+                        role: "user",
+                        content: prompt
+                    }
+                ],
+                temperature: 0.7
+            })
         });
 
-        return completion.choices[0].message.content;
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        return result.choices[0].message.content;
     } catch (error) {
         console.error('Error calling DeepSeek API:', error);
-        return text; // 如果处理失败，返回原始文本
+        return text;
     }
 }
-
-// function generatePrompt(text, settings) {
-//     let prompt = "";
-    
-//     // 添加翻译指令
-//     if (settings.language !== 'english') {
-//         switch(settings.language) {
-//             case 'chinese':
-//                 prompt += "Translate the following text to Chinese. ";
-//                 break;
-//             case 'spanish':
-//                 prompt += "Translate the following text to Spanish. ";
-//                 break;
-//             case 'japanese':
-//                 prompt += "Translate the following text to Japanese. ";
-//                 break;
-//         }
-//     }
-    
-//     // 添加风格化指令
-//     switch(settings.style) {
-//         case "excited":
-//             prompt += "Rephrase it in an enthusiastic and passionate sports commentary style: ";
-//             break;
-//         case "technical":
-//             prompt += "Rephrase it in a professional technical analysis style: ";
-//             break;
-//         case "casual":
-//             prompt += "Rephrase it in a lighthearted and entertaining style: ";
-//             break;
-//     }
-    
-//     return prompt + text;
-// }
 
 function generatePrompt(text, userInput) {
     let prompt = "";
 
     // 添加翻译指令
     if (userInput.language.toLowerCase() !== 'english') {
-        prompt += `Translate the following text to ${userInput.language}. `;
+        prompt += `Translate the following text to ${userInput.language}, `;
     }
 
     // 添加风格化指令
     if (userInput.commentator) {
-        prompt += `Rephrase it in the style of ${userInput.commentator}, focusing on their typical tone and commentary style. `;
+        prompt += `Rephrase it in the style of ${userInput.commentator}, focusing on their typical tone and commentary style: `;
     }
 
     return prompt + text;
