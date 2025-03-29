@@ -6114,6 +6114,8 @@ async function processWithDeepSeek(text) {
 }
 function generatePrompt(text, userInput) {
   let prompt = "";
+  prompt += `You are a professional sports commentary translator. Your task is to translate live sports commentary into the language specified by the user, aligning with the style the user chooses.`;
+  prompt += "OUTPUT TRANSLATED COMMENTARY ONLY. DO NOT INCLUDE ANY EXPLANATIONS, NOTES, OR ADDITIONAL CONTENT.";
   if (userInput.language.toLowerCase() !== "english") {
     prompt += `Translate the following text transcribed from a sports game commentary to ${userInput.language}, `;
   }
