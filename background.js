@@ -162,16 +162,3 @@ function generatePrompt(text, userInput) {
 
     return prompt + text;
 }
-
-
-function stopRecording() {
-    if (mediaRecorder && mediaRecorder.state === "recording") {
-        mediaRecorder.stop();
-        mediaRecorder = null;
-    }
-    // 清理其他资源...
-    if (audioContext) {
-        audioContext.close();
-        audioContext = null;
-    }
-}

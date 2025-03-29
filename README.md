@@ -4,7 +4,7 @@ A Chrome extension that provides real-time audio transcription for sports videos
 
 ## TODO
 
-- fix restart
+
 
 ## Features
 
@@ -14,13 +14,20 @@ A Chrome extension that provides real-time audio transcription for sports videos
 - Silence detection and processing
 - User-friendly popup interface
 - Maintains history of recent transcriptions
+- Customize language and commentator style
 
 ## Installation
 
 1. Clone this repository
-2. Open Chrome and navigate to `chrome://extensions/`
-3. Enable "Developer mode" in the top right
-4. Click "Load unpacked" and select the extension directory
+2. Replace your API keys
+3. Run:
+``` 
+npm install 
+npm run build 
+```
+4. Open Chrome and navigate to `chrome://extensions/`
+4. Enable "Developer mode" in the top right
+5. Click "Load unpacked" and select the extension directory
 
 ## Usage
 
