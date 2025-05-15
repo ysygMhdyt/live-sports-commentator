@@ -2,7 +2,7 @@
 
 A Chrome extension that provides real-time audio transcription for sports videos, delivering multi-language and stylized sports commentary.
 
-## Tips
+## Highlight
 
 The LemonFox API is currently not working. We've contacted LemonFox and are waiting for them to fix the issue.
 
