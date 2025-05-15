@@ -1,10 +1,10 @@
 # Live Sports Commentator Chrome Extension
 
-A Chrome extension that provides real-time audio transcription for sports videos, converting speech to text using the LemonFox AI API.
+A Chrome extension that provides real-time audio transcription for sports videos, delivering multi-language and stylized sports commentary.
 
-## TODO
+## Tips
 
-
+The LemonFox API is currently not working. We've contacted LemonFox and are waiting for them to fix the issue.
 
 ## Features
 
@@ -19,15 +19,16 @@ A Chrome extension that provides real-time audio transcription for sports videos
 ## Installation
 
 1. Clone this repository
-2. Replace your API keys
-3. Run:
+2. Apply Lemonfox API key and Deepseek API key
+3. **Replace your API keys**
+4. Run:
 ``` 
 npm install 
 npm run build 
 ```
-4. Open Chrome and navigate to `chrome://extensions/`
-4. Enable "Developer mode" in the top right
-5. Click "Load unpacked" and select the extension directory
+5. Open Chrome and navigate to `chrome://extensions/`
+6. Enable "Developer mode" in the top right
+7. Click "Load unpacked" and select the extension directory
 
 ## Usage
 
